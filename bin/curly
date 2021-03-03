@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+import os, sys, collections.abc, yaml, json
+from subprocess import call
+
+def update(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = update(d.get(k, {}), v)
+        elif isinstance(v, list):
+            if k in d:
+                d[k].extend(v)
+            else:
+                d[k] = v
+        else:
+            d[k] = v
+    return d
+
+
+def find_env_files(rf):
+    file_name = "env.yml"
+    env_files = []
+    cur_dir = os.path.dirname(os.path.abspath(rf))
+
+    while True:
+        file_list = os.listdir(cur_dir)
+        parent_dir = os.path.dirname(cur_dir)
+        if file_name in file_list:
+            env_files.append(os.path.join(cur_dir, file_name))
+            cur_dir = parent_dir
+            continue
+        else:
+            if cur_dir == parent_dir:
+                break
+            else:
+                cur_dir = parent_dir
+
+    return env_files
+
+def main(argv):
+    cwd = os.getcwd()
+    request_file = argv[1:][0]
+
+    env_files = find_env_files(request_file)
+    print(env_files)
+
+    data = {}
+
+    for env_file in env_files:
+        with open(env_file) as f:
+            x = yaml.load(f, Loader=yaml.FullLoader)
+            update(data, x)
+
+    with open(request_file) as f:
+        x = yaml.load(f, Loader=yaml.FullLoader)
+        update(data, x)
+
+    cmd = [
+        data['protocol'] if 'protocol' in data else 'http',
+        "--check-status",
+        "" if 'body' in data else "--ignore-stdin",
+        "--timeout=180",
+        data['method'] if 'method' in data else 'GET',
+        data['host'] + data['url']
+    ]
+
+    if 'body' in data:
+        cmd.append(f"<<<'{json.dumps(data['body'])}'")
+
+    if 'headers' in data:
+        for k in data['headers'].keys():
+            cmd.append(f"{k}:\"{data['headers'][k]}\"")
+
+    if 'query' in data:
+        for k in data['query'].keys():
+            cmd.append(f"{k}==\"{data['query'][k]}\"")
+
+    if 'args' in data:
+        for v in data['args']:
+            cmd.append(v)
+    
+    print("executing:", " ".join(cmd))
+    call(" ".join(cmd), shell=True)
+
+if __name__ == "__main__":
+    main(sys.argv)
