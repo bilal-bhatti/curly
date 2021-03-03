@@ -1,0 +1,5 @@
+method: POST
+url: /post
+body:
+  foo:
+    bar: baz
