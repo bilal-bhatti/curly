@@ -14,5 +14,6 @@ https://direnv.net
 
 ## Look at examples in the httpbin folder
 `curly httpbin/get.status.yml`
+
 `curly httpbin/post.something.yml`
 
