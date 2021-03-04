@@ -79,7 +79,9 @@ def main(argv):
         for v in data['args']:
             cmd.append(v)
     
-    print("executing:", " ".join(cmd))
+    print(">>>>")
+    print(" ".join(cmd))
+    print("<<<<")
     call(" ".join(cmd), shell=True)
 
 if __name__ == "__main__":
