@@ -1,10 +1,12 @@
 method: PUT
 path: /anything/$ANYTHING_ID
-query:
-  foo:
-    - one
-    - two
 body:
   foo:
+    slist:
+      - one
+      - two
     bar:
       baz: astring
+      nlist:
+        - 1
+        - 2
