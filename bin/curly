@@ -67,13 +67,17 @@ def main(argv):
     if 'body' in data:
         cmd.append(f"<<<'{json.dumps(data['body'])}'")
 
-    if 'headers' in data:
-        for k in data['headers'].keys():
-            cmd.append(f"{k}:\"{data['headers'][k]}\"")
+    if 'form' in data:
+        for k in data['form'].keys():
+            cmd.append(f"{k}=\"{data['form'][k]}\"")
 
     if 'query' in data:
         for k in data['query'].keys():
             cmd.append(f"{k}==\"{data['query'][k]}\"")
+
+    if 'headers' in data:
+        for k in data['headers'].keys():
+            cmd.append(f"{k}:\"{data['headers'][k]}\"")
 
     if 'args' in data:
         for v in data['args']:
