@@ -1,5 +1,5 @@
 method: POST
-url: /post
+path: /post
 body:
   foo:
     bar: baz

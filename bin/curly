@@ -61,7 +61,7 @@ def main(argv):
         "" if 'body' in data else "--ignore-stdin",
         "--timeout=180",
         data['method'] if 'method' in data else 'GET',
-        data['host'] + data['url']
+        data['host'] + data['path']
     ]
 
     if 'body' in data:
