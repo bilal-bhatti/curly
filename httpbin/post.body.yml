@@ -3,3 +3,7 @@ path: /post
 body:
   foo:
     bar: baz
+    nested:
+      value: astring
+      lower: 
+        value: 12345
