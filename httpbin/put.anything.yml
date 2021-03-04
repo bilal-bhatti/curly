@@ -1,0 +1,10 @@
+method: PUT
+path: /anything/$ANYTHING_ID
+query:
+  foo:
+    - one
+    - two
+body:
+  foo:
+    bar:
+      baz: astring

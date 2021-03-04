@@ -73,7 +73,11 @@ def main(argv):
 
     if 'query' in data:
         for k in data['query'].keys():
-            cmd.append(f"{k}==\"{data['query'][k]}\"")
+            if isinstance(data['query'][k], list):
+              for q in data['query'][k]:
+                cmd.append(f"{k}==\"{q}\"")
+            else:
+              cmd.append(f"{k}==\"{data['query'][k]}\"")
 
     if 'headers' in data:
         for k in data['headers'].keys():
