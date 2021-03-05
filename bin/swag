@@ -28,10 +28,10 @@ def main(argv):
   if os.path.exists("env.yml"):
     with open("env.yml", 'r') as ef:
       env = yaml.load(ef, Loader=yaml.FullLoader)
-
-  env['api_prefix'] = prefix
-  with open(f'env.yml', 'w') as outfile:
-    yaml.dump(env, outfile, default_flow_style=False)
+  if 'api_prefix' not in env:
+    env['api_prefix'] = prefix
+    with open(f'env.yml', 'w') as outfile:
+      yaml.dump(env, outfile, default_flow_style=False)
 
   for _p in data['paths']:
     for m in data['paths'][_p].keys():
@@ -43,8 +43,8 @@ def main(argv):
 
       with open(f'{m}.{clean}.yml', 'w') as outfile:
         d = {
-        "method": m.upper(),
-        "path": re.sub('\{(.+?)\}', sub, path)
+          "method": m.upper(),
+          "path": re.sub('\{(.+?)\}', sub, path)
         }
 
         if 'parameters' in data['paths'][_p][m]:
