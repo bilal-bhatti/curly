@@ -44,6 +44,7 @@ def main(argv):
     env_files = find_env_files(request_file)
     print(env_files)
 
+
     data = {}
 
     for env_file in env_files:
@@ -55,13 +56,18 @@ def main(argv):
         x = yaml.load(f, Loader=yaml.FullLoader)
         update(data, x)
 
+    rpath = [data['host'].strip("/\\")]
+    if 'api_prefix' in data:
+        rpath.append(data['api_prefix'].strip("/\\"))
+    rpath.append(data['path'].strip("/\\"))
+
     cmd = [
         data['protocol'] if 'protocol' in data else 'http',
         "--check-status",
         "" if 'body' in data else "--ignore-stdin",
         "--timeout=180",
         data['method'] if 'method' in data else 'GET',
-        f"\"{data['host']}{data['path']}\""
+        f"\"{'/'.join(rpath)}\""
     ]
 
     if 'body' in data:

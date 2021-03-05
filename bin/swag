@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+import re, sys, os, json, yaml, inflection 
+
+def env_var(word):
+  key = underscore(word).upper()
+  if os.environ.get(key):
+    return os.environ.get(key)
+  return f"${{{key}}}"
+
+def underscore(word):
+  return inflection.underscore(word).upper()
+
+def main(argv):
+  cwd = os.getcwd()
+  api = argv[1:][0]
+
+  with open(api) as f:
+    data = json.load(f)
+
+  def sub(matched):
+    return env_var(underscore(matched.group(1)))
+
+  paths = [k for k in data['paths'].keys()]
+  prefix = os.path.commonprefix(paths)
+
+  env = {}
+  if os.path.exists("env.yml"):
+    with open("env.yml", 'r') as ef:
+      env = yaml.load(ef, Loader=yaml.FullLoader)
+
+  env['api_prefix'] = prefix
+  with open(f'env.yml', 'w') as outfile:
+    yaml.dump(env, outfile, default_flow_style=False)
+
+  for _p in data['paths']:
+    for m in data['paths'][_p].keys():
+      # print(json.dumps(data['paths'][_p][m], indent=2))
+
+      path = _p.replace(prefix, "/")
+      clean = re.sub('\{.+?\}', "", path).strip("/\\")
+      clean = re.sub("\//*", ".", clean)
+
+      with open(f'{m}.{clean}.yml', 'w') as outfile:
+        d = {
+        "method": m.upper(),
+        "path": re.sub('\{(.+?)\}', sub, path)
+        }
+
+        if 'parameters' in data['paths'][_p][m]:
+          for p in data['paths'][_p][m]['parameters']:
+            if p['in'] == 'query' and p['required']:
+              if 'query' not in d:
+                d['query'] = {}
+              if p['type'] == 'string':
+                d['query'][p['name']] = env_var(p['name'])
+              elif p['type'] == 'number':
+                d['query'][p['name']] = 123
+
+            elif p['in'] == 'body':
+              model = p['schema']['$ref'].replace('#/definitions/', '')
+              schema = data['definitions'][model]
+
+              if 'body' not in d:
+                d['body'] = {}
+              for k in schema['properties'].keys():
+                if schema['properties'][k]['type'] == 'array':
+                  d['body'][k] = [k]
+                elif schema['properties'][k]['type'] == 'object':
+                  d['body'][k] = {k: env_var(k)}
+
+        yaml.dump(d, outfile, default_flow_style=False)
+
+if __name__ == "__main__":
+  main(sys.argv)
