@@ -126,6 +126,12 @@ def main(argv):
               val = schema_to_value(apispec, schema)
               d['body'] = val
 
+      if 'requestBody' in apispec['paths'][_p][m]:
+        rbody = apispec['paths'][_p][m]['requestBody']
+        schema = resolve_ref(apispec, rbody['content']['application/json']['schema']['$ref'])
+        val = schema_to_value(apispec, schema)
+        d['body'] = val
+
       if os.path.exists(f'{m}.{clean}.yml'):
         with open(f'{m}.{clean}.yml', 'r') as ef:
           old = yaml.load(ef, Loader=yaml.FullLoader)
