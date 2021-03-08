@@ -61,6 +61,10 @@ def main(argv):
 
   paths = [k for k in apispec['paths'].keys()]
   prefix = os.path.commonprefix(paths)
+  
+  for p in paths:
+    if len(p.replace(prefix, "/").strip("/")) == 0:
+      prefix = "/"
 
   if len(prefix.strip("/")) > 0:
     env = {}
@@ -74,7 +78,6 @@ def main(argv):
 
   for _p in apispec['paths']:
     for m in apispec['paths'][_p].keys():
-
       path = _p.replace(prefix, "/")
       clean = re.sub('\{(.+?)\}', to_snake_case, path).strip("/\\")
       clean = re.sub("\//*", ".", clean)
@@ -89,21 +92,30 @@ def main(argv):
           if p['in'] == 'query':
             if 'query' not in d:
               d['query'] = {}
-              
-            if p['type'] == 'array':
+            
+            ptype = p['type'] if 'type' in p else p['schema']['type']
+
+            if ptype == 'array':
               d['query'][p['name']] = [env_var(p['name'])] 
-            elif p['type'] == 'string':
-              d['query'][p['name']] = env_var(p['name'])
-            elif p['type'] == 'number':
+            elif ptype == 'boolean':
+              d['query'][p['name']] = True
+            elif ptype == 'number' or ptype == 'integer':
               d['query'][p['name']] = 123
+            else:
+              d['query'][p['name']] = env_var(p['name'])
+
           elif p['in'] == 'formData':
             if 'form' not in d:
               d['form'] = {}
 
-            if p['type'] == 'string':
-              d['form'][p['name']] = env_var(p['name'])
-            elif p['type'] == 'number':
+            ptype = p['type'] if 'type' in p else p['schema']['type']
+
+            if ptype == 'boolean':
+              d['form'][p['name']] = True
+            elif ptype == 'number' or ptype == 'integer':
               d['form'][p['name']] = 123
+            else:
+              d['form'][p['name']] = env_var(p['name'])
           elif p['in'] == 'body':
             if 'items' in p['schema']:
               schema = resolve_ref(apispec, p['schema']['items']['$ref'])
