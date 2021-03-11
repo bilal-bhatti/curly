@@ -28,6 +28,9 @@ def resolve_ref(apispec, ref):
 def schema_to_value(apispec, schema):
   data = {}
 
+  if not 'properties' in schema:
+    return data
+
   for k in schema['properties'].keys():
     if k == 'xml':
       continue
