@@ -1,5 +1,6 @@
+---
 method: PUT
-path: /anything/$ANYTHING_ID
+path: /anything/38923472384928
 body:
   foo:
     slist:
