@@ -1,55 +1,108 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"net/http"
-	"net/http/httputil"
+	"net/url"
 	"os"
+	"time"
 
 	"github.com/nojima/httpie-go"
 	"github.com/nojima/httpie-go/exchange"
 	"github.com/nojima/httpie-go/flags"
 	"github.com/nojima/httpie-go/input"
 	"github.com/nojima/httpie-go/output"
-	"github.com/pkg/errors"
 )
 
+/*
+Usage: curly [-bdFfhjv] [-a value] [--check-status] [--http1] [--ignore-stdin] [--license] [-o value] [--overwrite] [--pretty value] [-p value] [--timeout value] [--verify value] [--version] [METHOD] URL [ITEM [ITEM ...]]
+ -a, --auth=value     colon-separated username and password for authentication
+ -b, --body           print only response body. shourtcut for --print=b
+     --check-status   Also check the HTTP status code and exit with an error if
+                      the status indicates one
+ -d, --download       download file
+ -F, --follow         follow 30x Location redirects
+ -f, --form           data items are serialized as form fields
+ -h, --headers        print only the request headers. shortcut for --print=h
+     --http1          force HTTP/1.1 protocol
+     --ignore-stdin   do not attempt to read stdin
+ -j, --json           data items are serialized as JSON (default)
+     --license        print license information and exit
+ -o, --output=value   output file
+     --overwrite      overwrite existing file
+     --pretty=value   controls output formatting (all, format, none)
+ -p, --print=value    specifies what the output should contain (HBhb)
+     --timeout=value  timeout seconds that you allow the whole operation to take
+ -v, --verbose        print the request as well as the response. shortcut for
+                      --print=HBhb
+     --verify=value   verify Host SSL certificate, 'yes' or 'no' ('yes' by
+                      default, uppercase is also working)
+     --version        print version and exit
+*/
+
 func main() {
-	if err := httpie.Main(); err != nil {
+	if err := Main(); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func Main() error {
-	// Parse flags
-	args, usage, optionSet, err := flags.Parse(os.Args)
-	if err != nil {
-		return err
+func options() {
+	options := &flags.OptionSet{
+		InputOptions:    input.Options{},
+		OutputOptions:   output.Options{},
+		ExchangeOptions: exchange.Options{},
 	}
-	inputOptions := optionSet.InputOptions
-	exchangeOptions := optionSet.ExchangeOptions
-	outputOptions := optionSet.OutputOptions
+	options.InputOptions.JSON = true
+	fmt.Println(options)
+}
 
-	// Parse positional arguments
-	in, err := input.ParseArgs(args, os.Stdin, &inputOptions)
-	if _, ok := errors.Cause(err).(*input.UsageError); ok {
-		usage.PrintUsage(os.Stderr)
-		return err
+func Main() error {
+	options := &flags.OptionSet{
+		InputOptions: input.Options{
+			JSON:      true,
+			Form:      false,
+			ReadStdin: false,
+		},
+		OutputOptions: output.Options{
+			PrintRequestHeader:  true,
+			PrintRequestBody:    true,
+			PrintResponseHeader: true,
+			PrintResponseBody:   true,
+			EnableFormat:        true,
+			EnableColor:         true,
+			Download:            false,
+			OutputFile:          "",
+			Overwrite:           false,
+		},
+		ExchangeOptions: exchange.Options{
+			Timeout:         time.Duration(1 * time.Minute),
+			FollowRedirects: false,
+			Auth: exchange.AuthOptions{
+				Enabled: false,
+			},
+			SkipVerify:  false,
+			ForceHTTP1:  false,
+			CheckStatus: true,
+		},
 	}
-	if err != nil {
-		return err
+
+	url, _ := url.Parse("https://httpbin.org/anything")
+	in := &input.Input{
+		Method: input.Method("PUT"),
+		URL:    url,
+		Body: input.Body{
+			BodyType: input.RawBody,
+			Raw:      []byte(`{"foo":"bar"}`),
+		},
 	}
 
 	// Send request and receive response
-	status, err := Exchange(in, &exchangeOptions, &outputOptions)
+	status, err := httpie.Exchange(in, &options.ExchangeOptions, &options.OutputOptions)
 	if err != nil {
 		return err
 	}
 
-	if exchangeOptions.CheckStatus {
+	if options.ExchangeOptions.CheckStatus {
 		os.Exit(getExitStatus(status))
 	}
 
@@ -61,97 +114,4 @@ func getExitStatus(statusCode int) int {
 		return statusCode / 100
 	}
 	return 0
-}
-
-func Exchange(in *input.Input, exchangeOptions *exchange.Options, outputOptions *output.Options) (int, error) {
-	// Prepare printer
-	writer := bufio.NewWriter(os.Stdout)
-	defer writer.Flush()
-	printer := output.NewPrinter(writer, outputOptions)
-
-	// Build HTTP request
-	request, err := exchange.BuildHTTPRequest(in, exchangeOptions)
-	if err != nil {
-		return -1, err
-	}
-
-	// Print HTTP request
-	if outputOptions.PrintRequestHeader || outputOptions.PrintRequestBody {
-		// `request` does not contain HTTP headers that HttpClient.Do adds.
-		// We can get these headers by DumpRequestOut and ReadRequest.
-		dump, err := httputil.DumpRequestOut(request, true)
-		if err != nil {
-			return -1, err // should not happen
-		}
-		r, err := http.ReadRequest(bufio.NewReader(bytes.NewReader(dump)))
-		if err != nil {
-			return -1, err // should not happen
-		}
-		defer r.Body.Close()
-
-		// ReadRequest deletes Host header. We must restore it.
-		if request.Host != "" {
-			r.Header.Set("Host", request.Host)
-		} else {
-			r.Header.Set("Host", request.URL.Host)
-		}
-
-		if outputOptions.PrintRequestHeader {
-			if err := printer.PrintRequestLine(r); err != nil {
-				return -1, err
-			}
-			if err := printer.PrintHeader(r.Header); err != nil {
-				return -1, err
-			}
-		}
-		if outputOptions.PrintRequestBody {
-			if err := printer.PrintBody(r.Body, r.Header.Get("Content-Type")); err != nil {
-				return -1, err
-			}
-		}
-		fmt.Fprintln(writer)
-		writer.Flush()
-	}
-
-	// Send HTTP request and receive HTTP request
-	httpClient, err := exchange.BuildHTTPClient(exchangeOptions)
-	if err != nil {
-		return -1, err
-	}
-	resp, err := httpClient.Do(request)
-	if err != nil {
-		return -1, errors.Wrap(err, "sending HTTP request")
-	}
-	defer resp.Body.Close()
-
-	if outputOptions.PrintResponseHeader {
-		if err := printer.PrintStatusLine(resp.Proto, resp.Status, resp.StatusCode); err != nil {
-			return -1, err
-		}
-		if err := printer.PrintHeader(resp.Header); err != nil {
-			return -1, err
-		}
-		writer.Flush()
-	}
-
-	if outputOptions.Download {
-		file := output.NewFileWriter(in.URL, outputOptions)
-
-		if err := printer.PrintDownload(resp.ContentLength, file.Filename()); err != nil {
-			return -1, err
-		}
-		writer.Flush()
-
-		if err = file.Download(resp); err != nil {
-			return -1, err
-		}
-	} else {
-		if outputOptions.PrintResponseBody {
-			if err := printer.PrintBody(resp.Body, resp.Header.Get("Content-Type")); err != nil {
-				return -1, err
-			}
-		}
-	}
-
-	return resp.StatusCode, nil
 }
