@@ -79,7 +79,7 @@ def main(argv):
 
   if 'headers' in data:
     for k in data['headers'].keys():
-      cmd.append(f"{k}:\'{data['headers'][k]}\'")
+      cmd.append(f"{k}:{data['headers'][k]}")
 
   if 'args' in data:
     for v in data['args']:
