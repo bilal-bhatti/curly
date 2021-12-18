@@ -46,16 +46,6 @@ func main() {
 	}
 }
 
-func options() {
-	options := &flags.OptionSet{
-		InputOptions:    input.Options{},
-		OutputOptions:   output.Options{},
-		ExchangeOptions: exchange.Options{},
-	}
-	options.InputOptions.JSON = true
-	fmt.Println(options)
-}
-
 func Main() error {
 	options := &flags.OptionSet{
 		InputOptions: input.Options{
@@ -64,8 +54,8 @@ func Main() error {
 			ReadStdin: false,
 		},
 		OutputOptions: output.Options{
-			PrintRequestHeader:  true,
-			PrintRequestBody:    true,
+			PrintRequestHeader:  false,
+			PrintRequestBody:    false,
 			PrintResponseHeader: true,
 			PrintResponseBody:   true,
 			EnableFormat:        true,
@@ -76,7 +66,7 @@ func Main() error {
 		},
 		ExchangeOptions: exchange.Options{
 			Timeout:         time.Duration(1 * time.Minute),
-			FollowRedirects: false,
+			FollowRedirects: true,
 			Auth: exchange.AuthOptions{
 				Enabled: false,
 			},
