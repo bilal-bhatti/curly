@@ -132,4 +132,5 @@ env.yml
 .direnv
 *-service
 *.reqs
+vendor
 

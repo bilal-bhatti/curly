@@ -1,17 +1,47 @@
 package main
 
 import (
-	"fmt"
-	"net/url"
+	"context"
+	"flag"
+	"log"
 	"os"
-	"time"
 
-	"github.com/nojima/httpie-go"
-	"github.com/nojima/httpie-go/exchange"
-	"github.com/nojima/httpie-go/flags"
-	"github.com/nojima/httpie-go/input"
-	"github.com/nojima/httpie-go/output"
+	"github.com/bilal-bhatti/curly/internal/curly"
+	"github.com/google/subcommands"
 )
+
+var Version = "v0.0.0-DEV"
+
+func main() {
+	log.Println("version: ", Version)
+
+	flag.BoolVar(&curly.Debug, "d", false, "run with debug logging enabled")
+
+	flag.Parse()
+
+	curly.Tracef("executing with debug enabled")
+
+	rCmd := &requestCmd{}
+
+	subcommands.Register(subcommands.HelpCommand(), "")
+	subcommands.Register(subcommands.FlagsCommand(), "")
+	subcommands.Register(subcommands.CommandsCommand(), "")
+	subcommands.Register(rCmd, "")
+
+	allCmds := map[string]bool{
+		"commands": true, // builtin
+		"help":     true, // builtin
+		"flags":    true, // builtin
+		"template": true,
+		"apply":    true,
+	}
+
+	// Default to running the "apply" command.
+	if args := flag.Args(); len(args) == 0 || !allCmds[args[0]] {
+		os.Exit(int(rCmd.Execute(context.Background(), flag.CommandLine)))
+	}
+	os.Exit(int(subcommands.Execute(context.Background())))
+}
 
 /*
 Usage: curly [-bdFfhjv] [-a value] [--check-status] [--http1] [--ignore-stdin] [--license] [-o value] [--overwrite] [--pretty value] [-p value] [--timeout value] [--verify value] [--version] [METHOD] URL [ITEM [ITEM ...]]
@@ -39,6 +69,7 @@ Usage: curly [-bdFfhjv] [-a value] [--check-status] [--http1] [--ignore-stdin] [
      --version        print version and exit
 */
 
+/*
 func main() {
 	if err := Main(); err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
@@ -105,3 +136,4 @@ func getExitStatus(statusCode int) int {
 	}
 	return 0
 }
+*/
