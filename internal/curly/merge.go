@@ -42,6 +42,10 @@ func mergeMap(base, more reflect.Value) error {
 	for _, k := range more.MapKeys() {
 		left := base.MapIndex(k)
 
+		for left.Kind() == reflect.Ptr || left.Kind() == reflect.Interface {
+			left = left.Elem()
+		}
+
 		// left side does not have key
 		if !left.IsValid() {
 			base.SetMapIndex(k, more.MapIndex(k))
@@ -71,4 +75,20 @@ func mergeMap(base, more reflect.Value) error {
 	}
 
 	return nil
+}
+
+func convert(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = convert(v)
+		}
+		return m2
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convert(v)
+		}
+	}
+	return i
 }

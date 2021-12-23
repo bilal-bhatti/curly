@@ -59,6 +59,12 @@ func TestMerge(t *testing.T) {
 			expected: `{"a":{"b":"c","d":"e"},"x":"y"}`,
 		},
 		{
+			// map merge test
+			base:     `{"x":"y","a":{"d":"e","f":{"g":"h"}}}`,
+			more:     `{"a":{"b":"c","f":{"i":"j"}}}`,
+			expected: `{"a":{"b":"c","d":"e","f":{"g":"h","i":"j"}},"x":"y"}`,
+		},
+		{
 			// replace array test
 			base:     `{"x":"y","a":["d","e"]}`,
 			more:     `{"a":["b","c"]}`,

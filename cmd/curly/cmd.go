@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/bilal-bhatti/curly/internal/curly"
 	"github.com/google/subcommands"
@@ -12,7 +15,7 @@ import (
 type requestCmd struct {
 }
 
-func (*requestCmd) Name() string { return "apply" }
+func (*requestCmd) Name() string { return "run" }
 
 func (*requestCmd) Synopsis() string {
 	return "execute HTTP request file"
@@ -41,7 +44,31 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 		log.Fatalln(err)
 	}
 
-	curly.Tracef("env: %v", env)
+	err = json.NewEncoder(os.Stdout).Encode(env.Data)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var rfs []string
+	for _, a := range f.Args() {
+		if strings.HasSuffix(a, ".yml") {
+			rfs = append(rfs, a)
+		}
+	}
+
+	c := curly.NewCurly()
+
+	for _, rf := range rfs {
+		log.Println("running ", rf)
+		c.Go(curly.Thing{
+			Method: "get",
+			URI:    "https://httpbin.org/anything",
+			Headers: map[string]string{
+				"Accept":       "application/json",
+				"Content-Type": "application/json; charset=utf-8",
+			},
+		})
+	}
 
 	return subcommands.ExitSuccess
 }

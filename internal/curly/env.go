@@ -14,7 +14,7 @@ var efile = "env.yml"
 
 type env struct {
 	f    []string
-	data interface{}
+	Data interface{}
 }
 
 func Env() (*env, error) {
@@ -54,10 +54,12 @@ func (e *env) load() (*env, error) {
 			return nil, err
 		}
 
+		temp = convert(temp)
+
 		if i == len(e.f)-1 {
-			e.data = temp
+			e.Data = temp
 		} else {
-			err = Merge(e.data, temp)
+			err = Merge(e.Data, temp)
 			if err != nil {
 				return nil, err
 			}
