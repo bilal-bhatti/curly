@@ -13,7 +13,7 @@ var Debug = false
 func init() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
 	log.SetFlags(0)
-	log.SetPrefix("> ")
+	// log.SetPrefix("")
 	log.SetOutput(os.Stderr)
 }
 

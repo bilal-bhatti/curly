@@ -1,5 +1,7 @@
+---
 path: /anything
 query:
   foo:
     - one
     - two
+  bar: baz

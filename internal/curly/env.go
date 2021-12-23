@@ -54,7 +54,7 @@ func (e *env) load() (*env, error) {
 			return nil, err
 		}
 
-		temp = convert(temp)
+		temp = MapI2MapS(temp)
 
 		if i == len(e.f)-1 {
 			e.Data = temp

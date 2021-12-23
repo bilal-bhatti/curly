@@ -1,18 +1,24 @@
 package curly
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
 
 type Thing struct {
-	Method  string
-	URI     string
-	Headers map[string]string
-	Body    []byte
+	Scheme  string                 `yaml:"scheme" json:"scheme"`
+	Host    string                 `yaml:"host" json:"host"`
+	Method  string                 `yaml:"method" json:"method"`
+	Path    string                 `yaml:"path" json:"path"`
+	Headers map[string]string      `yaml:"headers" json:"headers"`
+	Body    interface{}            `yaml:"body" json:"body"`
+	Query   map[string]interface{} `yaml:"query" json:"query"`
+	Form    map[string]interface{} `yaml:"form" json:"form"`
 }
 
 type Curly struct {
@@ -37,12 +43,49 @@ func (c *Curly) Go(t Thing) {
 }
 
 func (c Curly) get(t Thing) error {
-	req, err := http.NewRequest(http.MethodGet, t.URI, http.NoBody)
+	var scheme = "http"
+	var uri string
+
+	if t.Scheme != "" {
+		scheme = t.Scheme
+	}
+
+	if t.Host != "" {
+		uri = fmt.Sprintf("%s://%s", scheme, t.Host)
+	}
+
+	uri = uri + t.Path
+
+	if t.Query != nil {
+		values := url.Values{}
+		for k, vv := range t.Query {
+			switch vvt := vv.(type) {
+			case []interface{}:
+				for _, v := range vvt {
+					values.Add(k, fmt.Sprintf("%v", v))
+				}
+			case interface{}:
+				values.Add(k, fmt.Sprintf("%v", vvt))
+			default:
+				values.Add(k, fmt.Sprintf("%v", vvt))
+			}
+		}
+
+		if strings.Contains(uri, "?") {
+			uri = uri + "&" + values.Encode()
+		} else {
+			uri = uri + "?" + values.Encode()
+		}
+	}
+
+	log.Println("<", uri)
+	req, err := http.NewRequest(http.MethodGet, uri, http.NoBody)
 	if err != nil {
 		return err
 	}
 
 	for k, v := range t.Headers {
+		log.Println("<", k, v)
 		req.Header.Add(k, v)
 	}
 
@@ -51,8 +94,11 @@ func (c Curly) get(t Thing) error {
 		return err
 	}
 
-	log.Println("status code", resp.StatusCode)
-	// body, _ := ioutil.ReadAll(resp.Body)
+	log.Println("> status code", resp.StatusCode)
+	for k := range resp.Header {
+		log.Println(">", k, resp.Header.Get(k))
+	}
+
 	bites, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
