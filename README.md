@@ -1,21 +1,33 @@
-## Install using homebrew
-* pyenv
-* direnv
+# curly
 
-## Configure direnv to load in your shell
-https://direnv.net
+[![Go Report Card](https://goreportcard.com/badge/github.com/bilal-bhatti/curly)](https://goreportcard.com/report/github.com/bilal-bhatti/curly)
 
-## Create .envrc file
-`cp envrc.sample .envrc`
 
-## Install Python
-`pyenv install 3.9.1`
+JSON API request collections.
 
-## Install Python dependencies
-`pip install -r requirements.txt`
+## install
+``` sh
+brew tap bilal-bhatti/homebrew-taps
+brew install curly
+```
+or
+``` sh
+go install github.com/bilal-bhatti/curly/cmd/curly@latest
+```
 
-## Look at examples in the httpbin folder
-`curly httpbin/get.status.yml`
+## commands
+get started
 
-`curly httpbin/post.something.yml`
+``` sh
+curly commands
+curly help run
+```
+
+### run
+make an api call
+
+``` sh
+curly -d run httpbin/get.status.yml
+curly httpbin/post.something.yml
+```
 
