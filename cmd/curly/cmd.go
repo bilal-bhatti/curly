@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/bilal-bhatti/curly/internal/curly"
@@ -53,7 +55,14 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 	for _, rf := range rfs {
 		log.Println("* running", rf)
 
-		env, err := curly.Env()
+		cwd := path.Dir(rf)
+		cwd, err := filepath.Abs(cwd)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		env, err := curly.Env(cwd)
 		if err != nil {
 			log.Fatalln(err)
 		}

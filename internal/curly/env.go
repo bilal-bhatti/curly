@@ -12,12 +12,13 @@ import (
 var efile = "env.yml"
 
 type env struct {
+	cwd  string
 	f    []string
 	Data interface{}
 }
 
-func Env() (*env, error) {
-	e := new(env)
+func Env(cwd string) (*env, error) {
+	e := &env{cwd: cwd}
 	return e.load()
 }
 
@@ -27,12 +28,12 @@ func (e *env) load() (*env, error) {
 		return nil, errors.Errorf("home directory error, %v", err)
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, errors.Errorf("current working directory error, %v", err)
-	}
+	// cwd, err := os.Getwd()
+	// if err != nil {
+	// 	return nil, errors.Errorf("current working directory error, %v", err)
+	// }
 
-	err = e.files(home, cwd)
+	err = e.files(home, e.cwd)
 	if err != nil {
 		return nil, err
 	}
