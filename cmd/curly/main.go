@@ -33,10 +33,10 @@ func main() {
 		"help":     true, // builtin
 		"flags":    true, // builtin
 		"template": true,
-		"apply":    true,
+		"run":      true,
 	}
 
-	// Default to running the "apply" command.
+	// Default to running the "run" command.
 	if args := flag.Args(); len(args) == 0 || !allCmds[args[0]] {
 		os.Exit(int(rCmd.Execute(context.Background(), flag.CommandLine)))
 	}

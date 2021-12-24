@@ -2,12 +2,11 @@ package curly
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var efile = "env.yml"
@@ -23,8 +22,6 @@ func Env() (*env, error) {
 }
 
 func (e *env) load() (*env, error) {
-	log.Println("initializing environment")
-
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, errors.Errorf("home directory error, %v", err)

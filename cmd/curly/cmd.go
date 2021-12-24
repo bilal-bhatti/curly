@@ -11,7 +11,7 @@ import (
 
 	"github.com/bilal-bhatti/curly/internal/curly"
 	"github.com/google/subcommands"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type requestCmd struct {
@@ -41,16 +41,6 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 	// 	log.Fatalln(err)
 	// }
 
-	env, err := curly.Env()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = json.NewEncoder(os.Stdout).Encode(env.Data)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	var rfs []string
 	for _, a := range f.Args() {
 		if strings.HasSuffix(a, ".yml") {
@@ -61,7 +51,12 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 	c := curly.NewCurly()
 
 	for _, rf := range rfs {
-		log.Println("running", rf)
+		log.Println("* running", rf)
+
+		env, err := curly.Env()
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		bites, err := ioutil.ReadFile(rf)
 		if err != nil {
@@ -83,6 +78,11 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 			log.Fatalln(err)
 		}
 
+		err = json.NewEncoder(os.Stdout).Encode(env.Data)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		bites, err = json.Marshal(env.Data)
 		if err != nil {
 			log.Fatalln(err)
@@ -94,14 +94,6 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 		}
 
 		c.Go(t)
-		// c.Go(curly.Thing{
-		// 	Method: "get",
-		// 	Path:   "https://httpbin.org/anything?foo=far",
-		// 	Headers: map[string]string{
-		// 		"Accept":       "application/json",
-		// 		"Content-Type": "application/json; charset=utf-8",
-		// 	},
-		// })
 	}
 
 	return subcommands.ExitSuccess

@@ -1,7 +1,8 @@
 method: POST
 path: /post
 headers:
-  Content-Type: "application/x-www-form-urlencoded"
+  # Content-Type: "application/x-www-form-urlencoded"
+  Content-Type: "multipart/form-data"
 form:
   foo: bar
   baz: foo
