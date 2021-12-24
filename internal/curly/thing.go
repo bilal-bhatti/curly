@@ -80,6 +80,8 @@ func (t Thing) Request() (*http.Request, error) {
 		return nil, err
 	}
 
+	t.Headers["User-Agent"] = "curly v0.0.1"
+
 	log.Println("*", endpoint.String())
 
 	var req *http.Request
@@ -124,11 +126,9 @@ func (t Thing) Request() (*http.Request, error) {
 	}
 
 	for k, v := range t.Headers {
-		log.Println("<", k, v)
+		log.Println("<H", k, v)
 		req.Header.Add(k, v)
 	}
-
-	req.Header.Add("User-Agent", "curly v0.0.1")
 
 	return req, nil
 }

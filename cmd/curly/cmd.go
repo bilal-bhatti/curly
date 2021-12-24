@@ -6,7 +6,6 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -17,6 +16,7 @@ import (
 )
 
 type requestCmd struct {
+	curl bool
 }
 
 func (*requestCmd) Name() string { return "run" }
@@ -35,14 +35,11 @@ execute request
 `
 }
 
-func (a *requestCmd) SetFlags(f *flag.FlagSet) {}
+func (a *requestCmd) SetFlags(f *flag.FlagSet) {
+	f.BoolVar(&a.curl, "c", false, "get cURL command only")
+}
 
 func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	// if _, err := os.Stat(a.template); errors.Is(err, os.ErrNotExist) {
-	// 	log.Println(a.Usage())
-	// 	log.Fatalln(err)
-	// }
-
 	var rfs []string
 	for _, a := range f.Args() {
 		if strings.HasSuffix(a, ".yml") {
@@ -50,7 +47,7 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 		}
 	}
 
-	c := curly.NewCurly()
+	c := curly.NewCurly(a.curl)
 
 	for _, rf := range rfs {
 		log.Println("* running", rf)
@@ -86,7 +83,7 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 			log.Fatalln(err)
 		}
 
-		err = json.NewEncoder(os.Stdout).Encode(env.Data)
+		err = yaml.NewEncoder(log.Writer()).Encode(env.Data)
 		if err != nil {
 			log.Fatalln(err)
 		}
