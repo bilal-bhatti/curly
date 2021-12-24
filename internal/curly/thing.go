@@ -99,6 +99,7 @@ func (t Thing) Request() (*http.Request, error) {
 	}
 
 	if t.Form != nil {
+		log.Println("* setting form data")
 		values := url.Values{}
 
 		for k, vv := range t.Form {

@@ -57,7 +57,6 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 
 		cwd := path.Dir(rf)
 		cwd, err := filepath.Abs(cwd)
-
 		if err != nil {
 			log.Fatalln(err)
 		}
