@@ -1,3 +1,7 @@
+/*
+Copyright © 2021 Bilal Bhatti
+*/
+
 package curly
 
 import (

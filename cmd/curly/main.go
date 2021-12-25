@@ -1,9 +1,8 @@
-package main
-
 /*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2021 Bilal Bhatti
 */
+
+package main
 
 func main() {
 	Execute()

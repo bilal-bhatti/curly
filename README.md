@@ -19,15 +19,15 @@ go install github.com/bilal-bhatti/curly/cmd/curly@latest
 get started
 
 ``` sh
-curly commands
-curly help run
+curly --help
 ```
 
 ### run
 make an api call
 
 ``` sh
-curly -d run httpbin/get.status.yml
+curly -v run httpbin/get.status.yml
 curly httpbin/post.something.yml
+eval "$(curly -c httpbin/post.something.yml)"
 ```
 

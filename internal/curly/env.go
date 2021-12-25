@@ -1,3 +1,7 @@
+/*
+Copyright © 2021 Bilal Bhatti
+*/
+
 package curly
 
 import (
@@ -27,11 +31,6 @@ func (e *env) load() (*env, error) {
 	if err != nil {
 		return nil, errors.Errorf("home directory error, %v", err)
 	}
-
-	// cwd, err := os.Getwd()
-	// if err != nil {
-	// 	return nil, errors.Errorf("current working directory error, %v", err)
-	// }
 
 	err = e.files(home, e.cwd)
 	if err != nil {
