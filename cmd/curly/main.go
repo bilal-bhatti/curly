@@ -38,6 +38,7 @@ func main() {
 
 	// Default to running the "run" command.
 	if args := flag.Args(); len(args) == 0 || !allCmds[args[0]] {
+		rCmd.SetFlags(flag.CommandLine)
 		os.Exit(int(rCmd.Execute(context.Background(), flag.CommandLine)))
 	}
 	os.Exit(int(subcommands.Execute(context.Background())))
@@ -67,73 +68,4 @@ Usage: curly [-bdFfhjv] [-a value] [--check-status] [--http1] [--ignore-stdin] [
      --verify=value   verify Host SSL certificate, 'yes' or 'no' ('yes' by
                       default, uppercase is also working)
      --version        print version and exit
-*/
-
-/*
-func main() {
-	if err := Main(); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func Main() error {
-	options := &flags.OptionSet{
-		InputOptions: input.Options{
-			JSON:      true,
-			Form:      false,
-			ReadStdin: false,
-		},
-		OutputOptions: output.Options{
-			PrintRequestHeader:  false,
-			PrintRequestBody:    false,
-			PrintResponseHeader: true,
-			PrintResponseBody:   true,
-			EnableFormat:        true,
-			EnableColor:         true,
-			Download:            false,
-			OutputFile:          "",
-			Overwrite:           false,
-		},
-		ExchangeOptions: exchange.Options{
-			Timeout:         time.Duration(1 * time.Minute),
-			FollowRedirects: true,
-			Auth: exchange.AuthOptions{
-				Enabled: false,
-			},
-			SkipVerify:  false,
-			ForceHTTP1:  false,
-			CheckStatus: true,
-		},
-	}
-
-	url, _ := url.Parse("https://httpbin.org/anything")
-	in := &input.Input{
-		Method: input.Method("PUT"),
-		URL:    url,
-		Body: input.Body{
-			BodyType: input.RawBody,
-			Raw:      []byte(`{"foo":"bar"}`),
-		},
-	}
-
-	// Send request and receive response
-	status, err := httpie.Exchange(in, &options.ExchangeOptions, &options.OutputOptions)
-	if err != nil {
-		return err
-	}
-
-	if options.ExchangeOptions.CheckStatus {
-		os.Exit(getExitStatus(status))
-	}
-
-	return nil
-}
-
-func getExitStatus(statusCode int) int {
-	if 300 <= statusCode && statusCode < 600 {
-		return statusCode / 100
-	}
-	return 0
-}
 */

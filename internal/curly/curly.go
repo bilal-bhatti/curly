@@ -6,19 +6,15 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	"moul.io/http2curl/v2"
 )
 
 type Curly struct {
 	client *http.Client
-	curl   bool
 }
 
-func NewCurly(curl bool) *Curly {
+func NewCurly() *Curly {
 	return &Curly{
 		client: http.DefaultClient,
-		curl:   curl,
 	}
 }
 
@@ -45,15 +41,6 @@ func (c Curly) get(t Thing, dump dumper) error {
 		return err
 	}
 
-	if c.curl {
-		curl, err := http2curl.GetCurlCommand(req)
-		if err != nil {
-			return err
-		}
-		log.Println(curl.String())
-		return nil
-	}
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
@@ -68,15 +55,6 @@ func (c Curly) put(t Thing, dump dumper) error {
 		return err
 	}
 
-	if c.curl {
-		curl, err := http2curl.GetCurlCommand(req)
-		if err != nil {
-			return err
-		}
-		log.Println(curl.String())
-		return nil
-	}
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
@@ -89,15 +67,6 @@ func (c Curly) post(t Thing, dump dumper) error {
 	req, err := t.Request()
 	if err != nil {
 		return err
-	}
-
-	if c.curl {
-		curl, err := http2curl.GetCurlCommand(req)
-		if err != nil {
-			return err
-		}
-		log.Println(curl.String())
-		return nil
 	}
 
 	resp, err := c.client.Do(req)

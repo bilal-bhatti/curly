@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path"
@@ -11,8 +12,10 @@ import (
 	"strings"
 
 	"github.com/bilal-bhatti/curly/internal/curly"
+	"github.com/fatih/color"
 	"github.com/google/subcommands"
 	"gopkg.in/yaml.v3"
+	"moul.io/http2curl/v2"
 )
 
 type requestCmd struct {
@@ -36,7 +39,7 @@ execute request
 }
 
 func (a *requestCmd) SetFlags(f *flag.FlagSet) {
-	f.BoolVar(&a.curl, "c", false, "get cURL command only")
+	f.BoolVar(&a.curl, "c", false, "print cURL command only")
 }
 
 func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -46,8 +49,6 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 			rfs = append(rfs, a)
 		}
 	}
-
-	c := curly.NewCurly(a.curl)
 
 	for _, rf := range rfs {
 		log.Println("* running", rf)
@@ -83,10 +84,12 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 			log.Fatalln(err)
 		}
 
+		color.Set(color.FgYellow)
 		err = yaml.NewEncoder(log.Writer()).Encode(env.Data)
 		if err != nil {
 			log.Fatalln(err)
 		}
+		color.Unset()
 
 		bites, err = json.Marshal(env.Data)
 		if err != nil {
@@ -98,7 +101,22 @@ func (a *requestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 			log.Fatalln(err)
 		}
 
-		c.Go(t)
+		if a.curl {
+			req, err := t.Request()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			curl, err := http2curl.GetCurlCommand(req)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			log.Println("\n*** cURL command")
+			fmt.Println(curl.String())
+		} else {
+			curly.NewCurly().Go(t)
+		}
 	}
 
 	return subcommands.ExitSuccess
