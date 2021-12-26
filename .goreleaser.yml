@@ -21,6 +21,9 @@ brews:
     tap:
       owner: bilal-bhatti
       name: homebrew-taps
+    description: "curly tool"
+    homepage: https://github.com/bilal-bhatti/curly
+    license: "MIT"
 archives:
   - replacements:
       darwin: Darwin
