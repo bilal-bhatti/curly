@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type Curly struct {
@@ -22,38 +21,13 @@ func NewCurly() *Curly {
 	}
 }
 
-func (c *Curly) Go(t Thing) {
-	t.Method = strings.ToUpper(t.Method)
-
-	switch t.Method {
-	case http.MethodGet:
-		c.get(t, dump)
-	case http.MethodPost:
-		c.post(t, dump)
-	case http.MethodPut:
-		c.put(t, dump)
-	default:
-		c.get(t, dump)
-	}
-}
-
 type dumper func(resp *http.Response) error
 
-func (c Curly) get(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return dump(resp)
+func (c *Curly) Go(t Thing) {
+	c.do(t, dump)
 }
 
-func (c Curly) put(t Thing, dump dumper) error {
+func (c Curly) do(t Thing, dump dumper) error {
 	req, err := t.Request()
 	if err != nil {
 		return err
@@ -64,19 +38,6 @@ func (c Curly) put(t Thing, dump dumper) error {
 		return err
 	}
 
-	return dump(resp)
-}
-
-func (c Curly) post(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
 	return dump(resp)
 }
 

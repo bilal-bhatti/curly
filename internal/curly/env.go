@@ -21,24 +21,39 @@ type env struct {
 	Data interface{}
 }
 
-func Env(cwd string) (*env, error) {
-	e := &env{cwd: cwd}
+func Env(path string) (*env, error) {
+	info, err := os.Stat(path)
+
+	if errors.Is(err, os.ErrNotExist) {
+		Tracef("env file not found, %s", path)
+		return nil, err
+	}
+
+	if info.IsDir() {
+		e := &env{cwd: path}
+
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, errors.Errorf("home directory error, %v", err)
+		}
+
+		err = e.files(home, e.cwd)
+		if err != nil {
+			return nil, err
+		}
+
+		return e.load()
+	}
+
+	e := &env{cwd: path}
+	e.f = append(e.f, path)
 	return e.load()
 }
 
 func (e *env) load() (*env, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, errors.Errorf("home directory error, %v", err)
-	}
-
-	err = e.files(home, e.cwd)
-	if err != nil {
-		return nil, err
-	}
+	Tracef("read env files, %v", e.f)
 
 	for i := len(e.f) - 1; i >= 0; i-- {
-		Tracef("read env file, %s", e.f[i])
 
 		yf, err := ioutil.ReadFile(e.f[i])
 		if err != nil {
@@ -81,7 +96,6 @@ func (e *env) files(home, cd string) error {
 }
 
 func exists(path string) bool {
-	Tracef("exists? %s", path)
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return false
 	}

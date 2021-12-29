@@ -19,6 +19,7 @@ type Thing struct {
 	Scheme  string                 `yaml:"scheme" json:"scheme"`
 	Host    string                 `yaml:"host" json:"host"`
 	Method  string                 `yaml:"method" json:"method"`
+	Prefix  string                 `yaml:"prefix" json:"prefix"`
 	Path    string                 `yaml:"path" json:"path"`
 	Headers map[string]string      `yaml:"headers" json:"headers"`
 	Body    interface{}            `yaml:"body" json:"body"`
@@ -26,8 +27,13 @@ type Thing struct {
 	Form    map[string]interface{} `yaml:"form" json:"form"`
 }
 
-func (t Thing) URL() (*url.URL, error) {
+func (t *Thing) URL() (*url.URL, error) {
 	var uri string
+
+	t.Method = strings.ToUpper(t.Method)
+	if t.Method == "" {
+		t.Method = http.MethodGet
+	}
 
 	if strings.HasPrefix(t.Path, "http") {
 		// fully qualified url/path provided
@@ -40,11 +46,12 @@ func (t Thing) URL() (*url.URL, error) {
 			scheme = t.Scheme
 		}
 
-		t.Host = strings.Trim(t.Host, "/")
-		t.Path = strings.Trim(t.Path, "/")
+		t.Host = strings.TrimSpace(t.Host)
+		t.Path = strings.TrimSpace(t.Path)
+		t.Prefix = strings.TrimSpace(t.Prefix)
 
 		if t.Host != "" {
-			uri = fmt.Sprintf("%s://%s/%s", scheme, t.Host, t.Path)
+			uri = fmt.Sprintf("%s://%s%s%s", scheme, t.Host, t.Prefix, t.Path)
 		}
 	}
 
@@ -86,7 +93,7 @@ func (t Thing) Request() (*http.Request, error) {
 
 	t.Headers["User-Agent"] = "curly v0.0.1"
 
-	log.Println("*", endpoint.String())
+	log.Println("*", t.Method, endpoint.String())
 
 	var req *http.Request
 	var body io.Reader
