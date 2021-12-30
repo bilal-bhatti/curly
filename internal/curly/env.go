@@ -6,6 +6,7 @@ package curly
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 
@@ -48,9 +49,10 @@ func Env(path string) (*env, error) {
 }
 
 func (e *env) load() (*env, error) {
-	Tracef("read env files, %v", e.f)
-
 	for i := len(e.f) - 1; i >= 0; i-- {
+		if Verbose {
+			log.Printf("read enviroment settings file, %s\n", e.f[i])
+		}
 
 		yf, err := ioutil.ReadFile(e.f[i])
 		if err != nil {

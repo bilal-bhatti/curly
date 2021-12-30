@@ -5,6 +5,7 @@ Copyright © 2021 Bilal Bhatti
 package curly
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,7 +36,7 @@ func (c Curly) do(t Thing, dump dumper) error {
 		return err
 	}
 
-	req.Header.Add("User-Agent", "curly "+Version)
+	req.Header.Add("User-Agent", fmt.Sprintf("curly v%s", Version))
 
 	resp, err := c.client.Do(req)
 	if err != nil {

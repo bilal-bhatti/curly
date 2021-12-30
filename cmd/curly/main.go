@@ -14,7 +14,7 @@ var Version = "v0.0.0"
 
 func main() {
 	curly.Version = Version
-	log.Println("curly", curly.Version)
+	log.Printf("curly v%s\n", curly.Version)
 
 	Execute()
 }
