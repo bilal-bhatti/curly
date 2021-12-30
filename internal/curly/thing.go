@@ -97,7 +97,10 @@ func (t Thing) Request() (*http.Request, error) {
 	var body io.Reader
 
 	if t.Body != nil {
-		log.Println("* setting body")
+		if Verbose {
+			log.Println("* setting body")
+		}
+
 		buf := &bytes.Buffer{}
 
 		if err := json.NewEncoder(buf).Encode(t.Body); err != nil {
@@ -110,7 +113,10 @@ func (t Thing) Request() (*http.Request, error) {
 	}
 
 	if t.Form != nil {
-		log.Println("* setting form data")
+		if Verbose {
+			log.Println("* setting form data")
+		}
+
 		values := url.Values{}
 
 		for k, vv := range t.Form {
