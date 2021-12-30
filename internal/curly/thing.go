@@ -91,8 +91,6 @@ func (t Thing) Request() (*http.Request, error) {
 		return nil, err
 	}
 
-	t.Headers["User-Agent"] = "curly v0.0.1"
-
 	log.Println("*", t.Method, endpoint.String())
 
 	var req *http.Request

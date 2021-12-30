@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var Debug = false
+var Verbose = false
 
 func init() {
 	// log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -22,7 +22,7 @@ func init() {
 }
 
 func Tracef(msg string, p ...interface{}) {
-	if !Debug {
+	if !Verbose {
 		return
 	}
 

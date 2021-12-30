@@ -11,6 +11,8 @@ import (
 	"os"
 )
 
+var Version = "DEV"
+
 type Curly struct {
 	client *http.Client
 }
@@ -32,6 +34,8 @@ func (c Curly) do(t Thing, dump dumper) error {
 	if err != nil {
 		return err
 	}
+
+	req.Header.Add("User-Agent", "curly "+Version)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

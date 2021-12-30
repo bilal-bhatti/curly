@@ -25,7 +25,7 @@ func Env(path string) (*env, error) {
 	info, err := os.Stat(path)
 
 	if errors.Is(err, os.ErrNotExist) {
-		Tracef("env file not found, %s", path)
+		Tracef("environment settings file not found, %s", path)
 		return nil, err
 	}
 
@@ -37,10 +37,7 @@ func Env(path string) (*env, error) {
 			return nil, errors.Errorf("home directory error, %v", err)
 		}
 
-		err = e.files(home, e.cwd)
-		if err != nil {
-			return nil, err
-		}
+		e.files(home, e.cwd)
 
 		return e.load()
 	}
@@ -82,17 +79,17 @@ func (e *env) load() (*env, error) {
 
 }
 
-func (e *env) files(home, cd string) error {
+func (e *env) files(home, cd string) {
 	yf := path.Join(cd, efile)
 	if exists(yf) {
 		e.f = append(e.f, yf)
 	}
 
 	if home == cd {
-		return nil
+		return
 	}
 
-	return e.files(home, path.Dir(cd))
+	e.files(home, path.Dir(cd))
 }
 
 func exists(path string) bool {

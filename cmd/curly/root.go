@@ -36,7 +36,8 @@ eval "$(curly -c <request-file.yml>)"
 `,
 	Args:   cobra.MinimumNArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {},
-	Run:    run,
+
+	Run: run,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -54,16 +55,15 @@ func init() {
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.curly.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&curly.Verbose, "verbose", false, "run with verbose")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("verbose", "v", false, "run with verbose")
 	rootCmd.Flags().BoolP("curl", "c", false, "print cURL command")
 	rootCmd.Flags().StringP("env", "e", "", "environment settings file")
 }
 
 func run(cmd *cobra.Command, args []string) {
-	curly.Debug, _ = cmd.Flags().GetBool("verbose")
 
 	var rfs []string
 	for _, a := range args {
@@ -73,7 +73,10 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	for _, req_file := range rfs {
-		log.Println("* running", req_file)
+		if curly.Verbose {
+			log.Println("* running", req_file)
+
+		}
 
 		var env_path string
 		var err error
@@ -114,9 +117,11 @@ func run(cmd *cobra.Command, args []string) {
 			log.Fatalln(err)
 		}
 
-		err = yaml.NewEncoder(log.Writer()).Encode(env.Data)
-		if err != nil {
-			log.Fatalln(err)
+		if curly.Verbose {
+			err = yaml.NewEncoder(log.Writer()).Encode(env.Data)
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		bites, err = json.Marshal(env.Data)
