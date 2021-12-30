@@ -51,7 +51,7 @@ func Env(path string) (*env, error) {
 func (e *env) load() (*env, error) {
 	for i := len(e.f) - 1; i >= 0; i-- {
 		if Verbose {
-			log.Printf("read enviroment settings file, %s\n", e.f[i])
+			log.Printf("* settings file, %s\n", e.f[i])
 		}
 
 		yf, err := ioutil.ReadFile(e.f[i])
@@ -75,10 +75,10 @@ func (e *env) load() (*env, error) {
 				return nil, err
 			}
 		}
+
 	}
 
 	return e, nil
-
 }
 
 func (e *env) files(home, cd string) {

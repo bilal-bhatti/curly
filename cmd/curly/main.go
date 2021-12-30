@@ -10,7 +10,7 @@ import (
 	"github.com/bilal-bhatti/curly/internal/curly"
 )
 
-var Version = "v0.0.0"
+var Version = "0.0.0"
 
 func main() {
 	curly.Version = Version

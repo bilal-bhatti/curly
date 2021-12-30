@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/bilal-bhatti/curly/internal/curly"
+	"github.com/bilal-bhatti/jt/pkg"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"moul.io/http2curl/v2"
@@ -122,6 +123,12 @@ func run(cmd *cobra.Command, args []string) {
 			if err != nil {
 				log.Fatalln(err)
 			}
+		}
+
+		jtool := jt.Template{Debug: curly.Verbose}
+		err = jtool.Apply(env.Data, env.Data)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
 		bites, err = json.Marshal(env.Data)
