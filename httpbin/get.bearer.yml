@@ -1,4 +1,4 @@
 path: /bearer
 headers:
-  Authorization: "$e{BEARER_TOKEN}"
+  Authorization: "Bearer $e{TOKEN}"
 
