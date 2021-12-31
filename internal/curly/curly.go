@@ -26,8 +26,8 @@ func NewCurly() *Curly {
 
 type dumper func(resp *http.Response) error
 
-func (c *Curly) Go(t Thing) {
-	c.do(t, dump)
+func (c *Curly) Go(t Thing) error {
+	return c.do(t, dump)
 }
 
 func (c Curly) do(t Thing, dump dumper) error {

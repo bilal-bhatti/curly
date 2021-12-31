@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/bilal-bhatti/curly/internal/curly"
-	"github.com/bilal-bhatti/jt/pkg"
+	jt "github.com/bilal-bhatti/jt/pkg"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"moul.io/http2curl/v2"
@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 	Use:   "curly [flags] <request-file.yml>",
 	Short: "Execute an http request from supplied <request-file.yml>",
 	Long: `curly is a small wrapper around go http.request to make
-working with rest apis easy, as persistent collections of request
+working with rest apis easier, as persistent collections of request
 files. It can also print out the equivalent cURL command.
 
 examples:
@@ -35,8 +35,12 @@ curly <request-file.yml>
 curly -c <request-file.yml>
 eval "$(curly -c <request-file.yml>)"
 `,
-	Args:   cobra.MinimumNArgs(1),
-	PreRun: func(cmd *cobra.Command, args []string) {},
+	Args: cobra.MinimumNArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if curly.Verbose {
+			log.Printf("curly v%s\n", curly.Version)
+		}
+	},
 
 	Run: run,
 }
@@ -104,7 +108,6 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 		var raw interface{}
-		var t curly.Thing
 
 		err = yaml.Unmarshal(bites, &raw)
 		if err != nil {
@@ -136,6 +139,8 @@ func run(cmd *cobra.Command, args []string) {
 			log.Fatalln(err)
 		}
 
+		var t curly.Thing
+
 		err = json.Unmarshal(bites, &t)
 		if err != nil {
 			log.Fatalln(err)
@@ -155,7 +160,10 @@ func run(cmd *cobra.Command, args []string) {
 			log.Println("\n*** cURL command")
 			fmt.Println(curl.String())
 		} else {
-			curly.NewCurly().Go(t)
+			err := curly.NewCurly().Go(t)
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 	}
 }
