@@ -32,7 +32,7 @@ files. It can also print out the equivalent cURL command.
 examples:
 
 curly <request-file.yml>
-curly -c <request-file.yml>
+curly -c <request-file.yml> -e <env.yml>
 eval "$(curly -c <request-file.yml>)"
 `,
 	Args: cobra.MinimumNArgs(1),
