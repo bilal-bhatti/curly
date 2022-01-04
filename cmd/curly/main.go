@@ -4,12 +4,13 @@ Copyright © 2021 Bilal Bhatti
 
 package main
 
-import "log"
+import (
+	"github.com/bilal-bhatti/curly/internal/curly"
+)
 
-var Version = "v0.0.0-DEV"
+var Version = "0.0.0"
 
 func main() {
-	log.Println("version:", Version)
-
+	curly.Version = Version
 	Execute()
 }

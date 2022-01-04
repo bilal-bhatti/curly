@@ -5,3 +5,5 @@ headers:
 form:
   foo: bar
   baz: foo
+  jq: ${.path}
+  shell: $e{SHELL}

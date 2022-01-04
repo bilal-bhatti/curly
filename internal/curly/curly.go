@@ -5,12 +5,14 @@ Copyright © 2021 Bilal Bhatti
 package curly
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
+
+var Version = "DEV"
 
 type Curly struct {
 	client *http.Client
@@ -22,79 +24,27 @@ func NewCurly() *Curly {
 	}
 }
 
-func (c *Curly) Go(t Thing) {
-	t.Method = strings.ToUpper(t.Method)
-
-	switch t.Method {
-	case http.MethodGet:
-		c.get(t, dump)
-	case http.MethodPost:
-		c.post(t, dump)
-	case http.MethodPut:
-		c.put(t, dump)
-	case http.MethodDelete:
-		c.delete(t, dump)
-	default:
-		c.get(t, dump)
-	}
-}
-
-func (c Curly) get(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return dump(resp)
-}
-
-func (c Curly) post(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-	return dump(resp)
-}
-
-func (c Curly) put(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return dump(resp)
-}
-
-func (c Curly) delete(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return dump(resp)
-}
-
 type dumper func(resp *http.Response) error
+
+func (c *Curly) Go(t Thing) error {
+	return c.do(t, dump)
+}
+
+func (c Curly) do(t Thing, dump dumper) error {
+	req, err := t.Request()
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("User-Agent", fmt.Sprintf("curly v%s", Version))
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	return dump(resp)
+}
 
 func dump(resp *http.Response) error {
 	defer resp.Body.Close()
