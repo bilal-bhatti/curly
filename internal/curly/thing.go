@@ -63,19 +63,7 @@ func (t *Thing) URL() (*url.URL, error) {
 	}
 
 	if t.Query != nil {
-		values := url.Values{}
-		for k, vv := range t.Query {
-			switch vvt := vv.(type) {
-			case []interface{}:
-				for _, v := range vvt {
-					values.Add(k, fmt.Sprintf("%v", v))
-				}
-			case interface{}:
-				values.Add(k, fmt.Sprintf("%v", vvt))
-			default:
-				values.Add(k, fmt.Sprintf("%v", vvt))
-			}
-		}
+		values := t.values(t.Query)
 
 		if strings.Contains(uri, "?") {
 			uri = uri + "&" + values.Encode()
@@ -122,20 +110,7 @@ func (t Thing) Request() (*http.Request, error) {
 			log.Println("* setting form data")
 		}
 
-		values := url.Values{}
-
-		for k, vv := range t.Form {
-			switch vvt := vv.(type) {
-			case []interface{}:
-				for _, v := range vvt {
-					values.Add(k, fmt.Sprintf("%v", v))
-				}
-			case interface{}:
-				values.Add(k, fmt.Sprintf("%v", vvt))
-			default:
-				values.Add(k, fmt.Sprintf("%v", vvt))
-			}
-		}
+		values := t.values(t.Form)
 
 		body = strings.NewReader(values.Encode())
 	}
@@ -185,4 +160,23 @@ func (t Thing) body_as_file(match []string) io.Reader {
 
 	var reader io.Reader = (*os.File)(f)
 	return reader
+}
+
+func (t Thing) values(data map[string]interface{}) url.Values {
+	values := url.Values{}
+
+	for k, vv := range data {
+		switch vvt := vv.(type) {
+		case []interface{}:
+			for _, v := range vvt {
+				values.Add(k, fmt.Sprintf("%v", v))
+			}
+		case interface{}:
+			values.Add(k, fmt.Sprintf("%v", vvt))
+		default:
+			values.Add(k, fmt.Sprintf("%v", vvt))
+		}
+	}
+
+	return values
 }
