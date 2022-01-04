@@ -1,0 +1,4 @@
+---
+method: PUT
+path: /anything/38923472384928
+body: $@{thing.json}

@@ -140,6 +140,7 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 		var t curly.Thing
+		t.Cwd = path.Dir(req_file)
 
 		err = json.Unmarshal(bites, &t)
 		if err != nil {

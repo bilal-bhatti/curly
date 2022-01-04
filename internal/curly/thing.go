@@ -12,10 +12,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 type Thing struct {
+	Cwd     string                 `yaml:"-" json:"-"`
 	Scheme  string                 `yaml:"scheme" json:"scheme"`
 	Host    string                 `yaml:"host" json:"host"`
 	Method  string                 `yaml:"method" json:"method"`
@@ -26,6 +31,8 @@ type Thing struct {
 	Query   map[string]interface{} `yaml:"query" json:"query"`
 	Form    map[string]interface{} `yaml:"form" json:"form"`
 }
+
+var epf = regexp.MustCompile(`\$(@){(.+)}`)
 
 func (t *Thing) URL() (*url.URL, error) {
 	var uri string
@@ -93,21 +100,19 @@ func (t Thing) Request() (*http.Request, error) {
 
 	log.Println("*", t.Method, endpoint.String())
 
-	var req *http.Request
 	var body io.Reader
 
 	if t.Body != nil {
-		if Verbose {
-			log.Println("* setting body")
+		if bs, ok := t.Body.(string); ok {
+			match := epf.FindStringSubmatch(bs)
+			if len(match) > 0 {
+				body = t.body_as_file(match)
+			} else {
+				body = strings.NewReader(bs)
+			}
+		} else {
+			body = t.body_as_json()
 		}
-
-		buf := &bytes.Buffer{}
-
-		if err := json.NewEncoder(buf).Encode(t.Body); err != nil {
-			log.Println(err)
-		}
-
-		body = buf
 	} else {
 		body = http.NoBody
 	}
@@ -135,7 +140,7 @@ func (t Thing) Request() (*http.Request, error) {
 		body = strings.NewReader(values.Encode())
 	}
 
-	req, err = http.NewRequest(t.Method, endpoint.String(), body)
+	req, err := http.NewRequest(t.Method, endpoint.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -146,4 +151,38 @@ func (t Thing) Request() (*http.Request, error) {
 	}
 
 	return req, nil
+}
+
+func (t Thing) body_as_json() io.Reader {
+	if Verbose {
+		log.Println("* setting json body")
+	}
+
+	buf := &bytes.Buffer{}
+
+	if err := json.NewEncoder(buf).Encode(t.Body); err != nil {
+		log.Println(err)
+	}
+
+	return buf
+}
+
+func (t Thing) body_as_file(match []string) io.Reader {
+	fp, err := filepath.Abs(path.Join(t.Cwd, match[2]))
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	if Verbose {
+		log.Println("* setting body from file", fp)
+	}
+
+	f, err := os.Open(fp)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	var reader io.Reader = (*os.File)(f)
+	return reader
 }

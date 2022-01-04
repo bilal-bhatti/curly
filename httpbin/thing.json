@@ -1,0 +1,8 @@
+{
+    "name": "a thing",
+    "size": 10,
+    "active": true,
+    "foo": {
+        "bar": "baz"
+    }
+}
