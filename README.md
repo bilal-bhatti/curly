@@ -26,7 +26,7 @@ curly --help
 make an api call
 
 ``` sh
-curly -v run httpbin/get.status.yml
+curly --verbose run httpbin/get.status.yml
 curly httpbin/post.something.yml
 eval "$(curly -c httpbin/post.something.yml)"
 ```
