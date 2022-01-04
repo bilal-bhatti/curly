@@ -32,28 +32,14 @@ func (c *Curly) Go(t Thing) {
 		c.post(t, dump)
 	case http.MethodPut:
 		c.put(t, dump)
+	case http.MethodDelete:
+		c.delete(t, dump)
 	default:
 		c.get(t, dump)
 	}
 }
 
-type dumper func(resp *http.Response) error
-
 func (c Curly) get(t Thing, dump dumper) error {
-	req, err := t.Request()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return dump(resp)
-}
-
-func (c Curly) put(t Thing, dump dumper) error {
 	req, err := t.Request()
 	if err != nil {
 		return err
@@ -79,6 +65,36 @@ func (c Curly) post(t Thing, dump dumper) error {
 	}
 	return dump(resp)
 }
+
+func (c Curly) put(t Thing, dump dumper) error {
+	req, err := t.Request()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	return dump(resp)
+}
+
+func (c Curly) delete(t Thing, dump dumper) error {
+	req, err := t.Request()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	return dump(resp)
+}
+
+type dumper func(resp *http.Response) error
 
 func dump(resp *http.Response) error {
 	defer resp.Body.Close()
