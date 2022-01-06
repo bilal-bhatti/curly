@@ -94,7 +94,7 @@ func (t Thing) Request() (*http.Request, error) {
 		if bs, ok := t.Body.(string); ok {
 			match := epf.FindStringSubmatch(bs)
 			if len(match) > 0 {
-				body = t.body_as_file(match)
+				body = t.body_from_file(match)
 			} else {
 				body = strings.NewReader(bs)
 			}
@@ -142,7 +142,7 @@ func (t Thing) body_as_json() io.Reader {
 	return buf
 }
 
-func (t Thing) body_as_file(match []string) io.Reader {
+func (t Thing) body_from_file(match []string) io.Reader {
 	fp, err := filepath.Abs(path.Join(t.Cwd, match[2]))
 
 	if err != nil {
@@ -158,8 +158,7 @@ func (t Thing) body_as_file(match []string) io.Reader {
 		log.Panicln(err)
 	}
 
-	var reader io.Reader = (*os.File)(f)
-	return reader
+	return (*os.File)(f)
 }
 
 func (t Thing) values(data map[string]interface{}) url.Values {

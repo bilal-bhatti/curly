@@ -70,17 +70,20 @@ func init() {
 
 func run(cmd *cobra.Command, args []string) {
 
-	var rfs []string
-	for _, a := range args {
-		if strings.HasSuffix(a, ".yml") {
-			rfs = append(rfs, a)
-		}
-	}
-
-	for _, req_file := range rfs {
+	for _, req_arg := range args {
 		if curly.Verbose {
-			log.Println("* running", req_file)
+			log.Println("* executing", req_arg)
+		}
 
+		var load loader
+
+		if strings.HasSuffix(req_arg, ".yml") || strings.HasSuffix(req_arg, ".yaml") {
+			load = from_file{req_arg: req_arg}
+		} else if strings.HasPrefix(req_arg, "http") {
+			load = from_path{path: req_arg}
+		} else {
+			// don't know what that is, skip
+			continue
 		}
 
 		var env_path string
@@ -89,7 +92,7 @@ func run(cmd *cobra.Command, args []string) {
 		if env_f, _ := cmd.Flags().GetString("env"); env_f != "" {
 			env_path = env_f
 		} else {
-			env_path = path.Dir(req_file)
+			env_path = load.env_dir()
 		}
 
 		env_path, err = filepath.Abs(env_path)
@@ -102,19 +105,10 @@ func run(cmd *cobra.Command, args []string) {
 			log.Fatalln(err)
 		}
 
-		bites, err := ioutil.ReadFile(req_file)
+		raw, err := load.raw()
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		var raw interface{}
-
-		err = yaml.Unmarshal(bites, &raw)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		raw = curly.MapI2MapS(raw)
 
 		err = curly.Merge(env.Data, raw)
 		if err != nil {
@@ -134,37 +128,91 @@ func run(cmd *cobra.Command, args []string) {
 			log.Fatalln(err)
 		}
 
-		bites, err = json.Marshal(env.Data)
+		bites, err := json.Marshal(env.Data)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
 		var t curly.Thing
-		t.Cwd = path.Dir(req_file)
+		t.Cwd = load.env_dir()
 
 		err = json.Unmarshal(bites, &t)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		if curl, _ := cmd.Flags().GetBool("curl"); curl {
-			req, err := t.Request()
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			curl, err := http2curl.GetCurlCommand(req)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			log.Println("\n*** cURL command")
-			fmt.Println(curl.String())
-		} else {
-			err := curly.NewCurly().Go(t)
-			if err != nil {
-				log.Fatalln(err)
-			}
+		if err := doThing(cmd, t); err != nil {
+			log.Fatalln(err)
 		}
 	}
+
+}
+
+func doThing(cmd *cobra.Command, t curly.Thing) error {
+	if curl, _ := cmd.Flags().GetBool("curl"); curl {
+		req, err := t.Request()
+		if err != nil {
+			return err
+		}
+
+		curl, err := http2curl.GetCurlCommand(req)
+		if err != nil {
+			return err
+		}
+
+		log.Println("\n*** cURL command")
+		fmt.Println(curl.String())
+	} else {
+		err := curly.NewCurly().Go(t)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type loader interface {
+	raw() (interface{}, error)
+	env_dir() string
+}
+
+type from_file struct {
+	req_arg string
+}
+
+func (f from_file) raw() (interface{}, error) {
+	bites, err := ioutil.ReadFile(f.req_arg)
+	if err != nil {
+		return nil, err
+	}
+
+	var raw interface{}
+
+	err = yaml.Unmarshal(bites, &raw)
+	if err != nil {
+		return nil, err
+	}
+
+	return curly.MapI2MapS(raw), nil
+}
+
+func (f from_file) env_dir() string {
+	return path.Dir(f.req_arg)
+}
+
+type from_path struct {
+	path string
+}
+
+func (f from_path) raw() (interface{}, error) {
+	return map[string]string{"path": f.path}, nil
+}
+
+func (f from_path) env_dir() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return wd
 }
