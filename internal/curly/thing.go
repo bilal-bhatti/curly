@@ -47,10 +47,8 @@ func (t *Thing) URL() (*url.URL, error) {
 		// ignore all else
 		uri = t.Path
 	} else {
-		var scheme = "http"
-
-		if t.Scheme != "" {
-			scheme = t.Scheme
+		if t.Scheme == "" {
+			t.Scheme = "http"
 		}
 
 		t.Host = strings.TrimSpace(t.Host)
@@ -58,7 +56,7 @@ func (t *Thing) URL() (*url.URL, error) {
 		t.Prefix = strings.TrimSpace(t.Prefix)
 
 		if t.Host != "" {
-			uri = fmt.Sprintf("%s://%s%s%s", scheme, t.Host, t.Prefix, t.Path)
+			uri = fmt.Sprintf("%s://%s%s%s", t.Scheme, t.Host, t.Prefix, t.Path)
 		}
 	}
 
@@ -101,11 +99,7 @@ func (t Thing) Request() (*http.Request, error) {
 		} else {
 			body = t.body_as_json()
 		}
-	} else {
-		body = http.NoBody
-	}
-
-	if t.Form != nil {
+	} else if t.Form != nil {
 		if Verbose {
 			log.Println("* setting form data")
 		}
@@ -113,6 +107,8 @@ func (t Thing) Request() (*http.Request, error) {
 		values := t.values(t.Form)
 
 		body = strings.NewReader(values.Encode())
+	} else {
+		body = http.NoBody
 	}
 
 	req, err := http.NewRequest(t.Method, endpoint.String(), body)

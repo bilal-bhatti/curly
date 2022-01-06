@@ -58,8 +58,6 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.curly.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&curly.Verbose, "verbose", false, "run with verbose")
 
 	// Cobra also supports local flags, which will only run
@@ -69,7 +67,6 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) {
-
 	for _, req_arg := range args {
 		if curly.Verbose {
 			log.Println("* executing", req_arg)
