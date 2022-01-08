@@ -41,8 +41,7 @@ eval "$(curly -c <request-file.yml>)"
 			log.Printf("curly v%s\n", curly.Version)
 		}
 	},
-
-	Run: run,
+	RunE: run,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -58,18 +57,22 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().BoolVar(&curly.Verbose, "verbose", false, "run with verbose")
+	rootCmd.PersistentFlags().BoolVarP(&curly.Verbose, "verbose", "v", false, "run with verbose")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("curl", "c", false, "print cURL command")
 	rootCmd.Flags().StringP("env", "e", "", "environment settings file")
+	// rootCmd.Flags().Bool("$", false, "cache http response")
 }
 
-func run(cmd *cobra.Command, args []string) {
+func run(cmd *cobra.Command, args []string) error {
+	logger := os.Stderr
+	// ouput := os.Stdout
+
 	for _, req_arg := range args {
 		if curly.Verbose {
-			log.Println("* executing", req_arg)
+			fmt.Fprintln(logger, "* executing", req_arg)
 		}
 
 		var load loader
@@ -83,69 +86,78 @@ func run(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		var env_path string
-		var err error
-
-		if env_f, _ := cmd.Flags().GetString("env"); env_f != "" {
-			env_path = env_f
-		} else {
-			env_path = load.env_dir()
-		}
-
-		env_path, err = filepath.Abs(env_path)
+		t, err := prepare(cmd, load)
 		if err != nil {
-			log.Fatalln(err)
-		}
-
-		env, err := curly.Env(env_path)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		raw, err := load.raw()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		err = curly.Merge(env.Data, raw)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		if curly.Verbose {
-			err = yaml.NewEncoder(log.Writer()).Encode(env.Data)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		}
-
-		jtool := jt.Template{Debug: curly.Verbose}
-		err = jtool.Apply(env.Data, env.Data)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		bites, err := json.Marshal(env.Data)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		var t curly.Thing
-		t.Cwd = load.env_dir()
-
-		err = json.Unmarshal(bites, &t)
-		if err != nil {
-			log.Fatalln(err)
+			return nil
 		}
 
 		if err := doThing(cmd, t); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 
+	return nil
 }
 
-func doThing(cmd *cobra.Command, t curly.Thing) error {
+func prepare(cmd *cobra.Command, load loader) (*curly.Thing, error) {
+	var env_path string
+	var err error
+
+	if env_f, _ := cmd.Flags().GetString("env"); env_f != "" {
+		env_path = env_f
+	} else {
+		env_path = load.env_dir()
+	}
+
+	env_path, err = filepath.Abs(env_path)
+	if err != nil {
+		return nil, err
+	}
+
+	env, err := curly.Env(env_path)
+	if err != nil {
+		return nil, err
+	}
+
+	raw, err := load.raw()
+	if err != nil {
+		return nil, err
+	}
+
+	err = curly.Merge(env.Data, raw)
+	if err != nil {
+		return nil, err
+	}
+
+	if curly.Verbose {
+		if err = yaml.NewEncoder(log.Writer()).Encode(env.Data); err != nil {
+			return nil, err
+		}
+	}
+
+	jtool := jt.Template{Debug: curly.Verbose}
+	err = jtool.Apply(env.Data, env.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	bites, err := json.Marshal(env.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	t := &curly.Thing{}
+	t.Cwd = load.env_dir()
+
+	err = json.Unmarshal(bites, t)
+	if err != nil {
+		return nil, err
+	}
+
+	return t, nil
+}
+
+func doThing(cmd *cobra.Command, t *curly.Thing) error {
 	if curl, _ := cmd.Flags().GetBool("curl"); curl {
 		req, err := t.Request()
 		if err != nil {
@@ -209,7 +221,7 @@ func (f from_path) raw() (interface{}, error) {
 func (f from_path) env_dir() string {
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 	return wd
 }

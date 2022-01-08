@@ -26,11 +26,11 @@ func NewCurly() *Curly {
 
 type dumper func(resp *http.Response) error
 
-func (c *Curly) Go(t Thing) error {
+func (c *Curly) Go(t *Thing) error {
 	return c.do(t, dump)
 }
 
-func (c Curly) do(t Thing, dump dumper) error {
+func (c Curly) do(t *Thing, dump dumper) error {
 	req, err := t.Request()
 	if err != nil {
 		return err
