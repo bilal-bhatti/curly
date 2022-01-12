@@ -85,6 +85,9 @@ type trimmer struct {
 
 func (t trimmer) Read(buf []byte) (int, error) {
 	n, err := t.reader.Read(buf)
+	if err != nil {
+		return n, err
+	}
 	trimmed := bytes.TrimFunc(buf[:n], unicode.IsSpace)
 	n = copy(buf, trimmed)
 	return n, err
