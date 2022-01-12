@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 type Thing struct {
@@ -78,6 +79,17 @@ func (t *Thing) URL() (*url.URL, error) {
 	return url, nil
 }
 
+type trimmer struct {
+	reader io.Reader
+}
+
+func (t trimmer) Read(buf []byte) (int, error) {
+	n, err := t.reader.Read(buf)
+	trimmed := bytes.TrimFunc(buf[:n], unicode.IsSpace)
+	n = copy(buf, trimmed)
+	return n, err
+}
+
 func (t Thing) Request() (*http.Request, error) {
 	endpoint, err := t.URL()
 	if err != nil {
@@ -111,7 +123,7 @@ func (t Thing) Request() (*http.Request, error) {
 		body = http.NoBody
 	}
 
-	req, err := http.NewRequest(t.Method, endpoint.String(), body)
+	req, err := http.NewRequest(t.Method, endpoint.String(), trimmer{reader: body})
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +163,7 @@ func (t Thing) body_from_file(match []string) io.Reader {
 
 	f, err := os.Open(fp)
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 	}
 
 	return (*os.File)(f)
