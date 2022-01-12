@@ -90,7 +90,7 @@ func (t trimmer) Read(buf []byte) (int, error) {
 	}
 	trimmed := bytes.TrimFunc(buf[:n], unicode.IsSpace)
 	n = copy(buf, trimmed)
-	return n, err
+	return n, nil
 }
 
 func (t Thing) Request() (*http.Request, error) {
