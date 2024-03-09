@@ -49,7 +49,7 @@ eval "$(curly -c <request-file.yml>)"
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
@@ -88,7 +88,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 		t, err := prepare(cmd, load)
 		if err != nil {
-			return nil
+			return err
 		}
 
 		if err := doThing(cmd, t); err != nil {
