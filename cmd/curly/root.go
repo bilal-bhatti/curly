@@ -7,7 +7,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -191,7 +190,7 @@ type from_file struct {
 }
 
 func (f from_file) raw() (interface{}, error) {
-	bites, err := ioutil.ReadFile(f.req_arg)
+	bites, err := os.ReadFile(f.req_arg)
 	if err != nil {
 		return nil, err
 	}

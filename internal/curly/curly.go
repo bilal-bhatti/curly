@@ -6,11 +6,16 @@ package curly
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"slices"
 )
+
+var redact = []string{
+	"Authorization",
+}
 
 var Version = "DEV"
 
@@ -51,11 +56,13 @@ func dump(resp *http.Response) error {
 
 	log.Println(">", http.StatusText(resp.StatusCode), resp.StatusCode)
 	for k := range resp.Header {
-		log.Println(">H", k, resp.Header.Get(k))
+		if !slices.Contains(redact, k) {
+			log.Println(">H", k, resp.Header.Get(k))
+		}
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		bites, err := ioutil.ReadAll(resp.Body)
+		bites, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}

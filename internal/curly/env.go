@@ -5,7 +5,6 @@ Copyright © 2021 Bilal Bhatti
 package curly
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -54,7 +53,7 @@ func (e *env) load() (*env, error) {
 			log.Printf("* settings file, %s\n", e.f[i])
 		}
 
-		yf, err := ioutil.ReadFile(e.f[i])
+		yf, err := os.ReadFile(e.f[i])
 		if err != nil {
 			return nil, err
 		}

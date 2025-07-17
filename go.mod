@@ -1,6 +1,6 @@
 module github.com/bilal-bhatti/curly
 
-go 1.17
+go 1.24.0
 
 require (
 	github.com/bilal-bhatti/jt v0.1.7

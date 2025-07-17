@@ -16,6 +16,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"unicode"
 )
@@ -132,7 +133,9 @@ func (t Thing) Request() (*http.Request, error) {
 	}
 
 	for k, v := range t.Headers {
-		log.Println("<H", k, v)
+		if !slices.Contains(redact, k) {
+			log.Println("<H", k, v)
+		}
 		req.Header.Add(k, v)
 	}
 
