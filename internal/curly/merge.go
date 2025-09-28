@@ -10,16 +10,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Merge(base, more interface{}) error {
+func Merge(base, more any) error {
 	return merge(reflect.ValueOf(base), reflect.ValueOf(more))
 }
 
 func merge(base, more reflect.Value) error {
-	for base.Kind() == reflect.Ptr || base.Kind() == reflect.Interface {
+	for base.Kind() == reflect.Pointer || base.Kind() == reflect.Interface {
 		base = base.Elem()
 	}
 
-	for more.Kind() == reflect.Ptr || more.Kind() == reflect.Interface {
+	for more.Kind() == reflect.Pointer || more.Kind() == reflect.Interface {
 		more = more.Elem()
 	}
 
@@ -46,7 +46,7 @@ func mergeMap(base, more reflect.Value) error {
 	for _, k := range more.MapKeys() {
 		left := base.MapIndex(k)
 
-		for left.Kind() == reflect.Ptr || left.Kind() == reflect.Interface {
+		for left.Kind() == reflect.Pointer || left.Kind() == reflect.Interface {
 			left = left.Elem()
 		}
 
@@ -60,7 +60,7 @@ func mergeMap(base, more reflect.Value) error {
 		right := more.MapIndex(k)
 
 		// if left side a map merge map
-		if _, ok := left.Interface().(map[string]interface{}); ok {
+		if _, ok := left.Interface().(map[string]any); ok {
 			err := merge(left, right)
 			if err != nil {
 				return err
@@ -69,7 +69,7 @@ func mergeMap(base, more reflect.Value) error {
 			continue
 		}
 
-		if _, ok := right.Interface().(map[string]interface{}); ok {
+		if _, ok := right.Interface().(map[string]any); ok {
 			// if left side is not a map, but right side is
 			return errors.New("values not mergeable")
 		}

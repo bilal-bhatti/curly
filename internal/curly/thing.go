@@ -22,16 +22,16 @@ import (
 )
 
 type Thing struct {
-	Cwd     string                 `yaml:"-" json:"-"`
-	Scheme  string                 `yaml:"scheme" json:"scheme"`
-	Host    string                 `yaml:"host" json:"host"`
-	Method  string                 `yaml:"method" json:"method"`
-	Prefix  string                 `yaml:"prefix" json:"prefix"`
-	Path    string                 `yaml:"path" json:"path"`
-	Headers map[string]string      `yaml:"headers" json:"headers"`
-	Body    interface{}            `yaml:"body" json:"body"`
-	Query   map[string]interface{} `yaml:"query" json:"query"`
-	Form    map[string]interface{} `yaml:"form" json:"form"`
+	Cwd     string            `yaml:"-" json:"-"`
+	Scheme  string            `yaml:"scheme" json:"scheme"`
+	Host    string            `yaml:"host" json:"host"`
+	Method  string            `yaml:"method" json:"method"`
+	Prefix  string            `yaml:"prefix" json:"prefix"`
+	Path    string            `yaml:"path" json:"path"`
+	Headers map[string]string `yaml:"headers" json:"headers"`
+	Body    any               `yaml:"body" json:"body"`
+	Query   map[string]any    `yaml:"query" json:"query"`
+	Form    map[string]any    `yaml:"form" json:"form"`
 }
 
 var epf = regexp.MustCompile(`\$(@){(.+)}`)
@@ -175,16 +175,16 @@ func (t Thing) body_from_file(match []string) io.Reader {
 	return (*os.File)(f)
 }
 
-func (t Thing) values(data map[string]interface{}) url.Values {
+func (t Thing) values(data map[string]any) url.Values {
 	values := url.Values{}
 
 	for k, vv := range data {
 		switch vvt := vv.(type) {
-		case []interface{}:
+		case []any:
 			for _, v := range vvt {
 				values.Add(k, fmt.Sprintf("%v", v))
 			}
-		case interface{}:
+		case any:
 			values.Add(k, fmt.Sprintf("%v", vvt))
 		default:
 			values.Add(k, fmt.Sprintf("%v", vvt))

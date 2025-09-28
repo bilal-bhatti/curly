@@ -18,7 +18,7 @@ var efile = "env.yml"
 type env struct {
 	cwd  string
 	f    []string
-	Data interface{}
+	Data any
 }
 
 func Env(path string) (*env, error) {
@@ -58,7 +58,7 @@ func (e *env) load() (*env, error) {
 			return nil, err
 		}
 
-		var temp interface{}
+		var temp any
 		err = yaml.Unmarshal(yf, &temp)
 		if err != nil {
 			return nil, err
