@@ -168,8 +168,13 @@ func doThing(cmd *cobra.Command, t *curly.Thing) error {
 			return err
 		}
 
+		curlStr := curl.String()
+		if t.Stream {
+			curlStr += " -N"
+		}
+
 		log.Println("\n*** cURL command")
-		fmt.Println(curl.String())
+		fmt.Println(curlStr)
 	} else {
 		err := curly.NewCurly().Go(t)
 		if err != nil {

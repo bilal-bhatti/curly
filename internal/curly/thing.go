@@ -32,6 +32,7 @@ type Thing struct {
 	Body    any               `yaml:"body" json:"body"`
 	Query   map[string]any    `yaml:"query" json:"query"`
 	Form    map[string]any    `yaml:"form" json:"form"`
+	Stream  bool              `yaml:"stream" json:"stream"`
 }
 
 var epf = regexp.MustCompile(`\$(@){(.+)}`)
